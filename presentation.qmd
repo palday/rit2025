@@ -173,7 +173,7 @@ What happens when we examine longitudinal data?
 
 # Examples
 
-## Course ratings from ETH-Zurich
+## Course ratings from ETH-Zurich (insteval)
 
 ```{julia}
 #| echo: true
@@ -184,6 +184,86 @@ using MixedModelsDatasets: dataset
                 dataset(:insteval); progress=isinteractive())
 println(fm1)
 ```
+
+```{julia}
+#| include: false
+using DataFrames, SparseArrays
+using CairoMakie, AlgebraOfGraphics
+using AlgebraOfGraphics: AlgebraOfGraphics as AoG
+insteval = DataFrame(dataset(:insteval))
+insteval[!, :observed] .= 1
+```
+
+## insteval -- Nesting
+
+::: {.panel-tabset}
+
+### Instructors x Students
+
+```{julia}
+#| echo: false
+ds = unstack(select(insteval, :s, :d, :y), :s, :y; fill=0, combine=sum)
+Matrix(select(ds, Not(:d)))'
+```
+
+### Instructors x Dept
+
+```{julia}
+#| echo: false
+ddept = unstack(select(insteval, :dept, :d, :y), :dept, :y; fill=0, combine=sum)
+Matrix(select(ddept, Not(:d)))'
+```
+
+### Students x Dept
+
+```{julia}
+#| echo: false
+sdept = unstack(select(insteval, :dept, :s, :y), :dept, :y; fill=0, combine=sum)
+Matrix(select(sdept, Not(:s)))'
+```
+
+:::
+
+## insteval -- Balance
+
+::: {.panel-tabset}
+
+### Instructors
+```{julia}
+#| echo: false
+draw(
+  data(combine(groupby(insteval, :d), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+### Department
+
+```{julia}
+#| echo: false
+draw(
+  data(combine(groupby(insteval, :dept), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram();
+  figure=(; size=(600, 450)),
+)
+```
+
+### Students
+
+```{julia}
+draw(
+  data(combine(groupby(insteval, :s), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+:::
+
 
 ## English Lexicon Project
 
@@ -241,9 +321,25 @@ println(elm01)
 Data from @Balota_2007. See https://embraceuncertaintybook.com/largescaledesigned.html for a more detailed exploration.
 :::
 
+## ELP -- Nesting
 ```{julia}
 #| echo: false
-using CairoMakie, AlgebraOfGraphics
+elp_crossing = select(pruned, :subj, :item)
+elp_crossing[!, :observed] .= true
+elp_crossing = unstack(elp_crossing, :item, :observed; fill=false)
+Matrix(select(elp_crossing, Not(:subj)))
+```
+
+## ELP -- Balance
+
+```{julia}
+#| echo: false
+draw(
+  data(bysubj) *
+  mapping(:sacc => "Number of correct responses") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
 ```
 
 ## ELP -- Excluding subjects
@@ -303,7 +399,7 @@ println(elm02)
 #| echo: false
 using Random
 ratings = DataFrame(eudataset(:ratings); copycols=true)
-movies = DataFrame(eudataset(:movies); copycols=true)
+movies = DataFrame(eudataset(:movies))
 users = combine(groupby(ratings, :userId),
                 nrow => :urtngs,
                 :rating => mean => :umnrtng)
