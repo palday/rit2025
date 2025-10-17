@@ -297,7 +297,7 @@ draw(
 println(elm02)
 ```
 
-## MovieLens Data [@Harper2016]
+## MovieLens Data
 
 ```{julia}
 #| echo: false
@@ -318,6 +318,11 @@ ml_genre = @formula(rating ~ 1 + Action + Adventure + Animation + Children + Com
 ml_model = lmm(ml_genre, ml_sample; progress=isinteractive())
 println(ml_model)
 ```
+
+
+::: footer
+Data from @Harper2016. See https://embraceuncertaintybook.com/largescaleobserved.htmlfor a more detailed exploration.
+:::
 
 # Thank you for your attention!
 
