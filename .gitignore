@@ -32,3 +32,5 @@ JuliaLocalPreferences.toml
 /.quarto/
 _site/
 _freeze/
+.cache/
+
