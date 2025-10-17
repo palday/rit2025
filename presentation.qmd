@@ -1,0 +1,148 @@
+---
+title: "Statistics beyond classical balanced designs"
+subtitle: "The joy of mixed models"
+author:
+  name: Phillip M. Alday
+  affiliation: Beacon Biosignals
+date: 2025-10-17
+date-format: "D MMMM YYYY"
+csl: apa-annotated-bibliography.csl
+bibliography: references.bib
+from: markdown+emoji
+format:
+  revealjs:
+    theme: dracula
+    # dark
+    # default
+    # dracula
+    # moon
+    # night
+    # serif
+    # simple
+    # solarized
+    # logo:
+    footer: RIT DRSG
+    slide-number: true
+    show-slide-number: all # speaker
+    # slide-tone: true
+    chalkboard: true
+    preview-links: true
+---
+# Why do we care about balance?
+
+## Balance is a simplifying assumption
+
+- *Computer* used to refer to a person and not a machine
+- Balance is a special case of *symmetry* and symmetry is a very useful property for simplifying computations
+
+## {auto-animate="true"}
+
+what is the combined variance of several samples?
+
+$$ \frac{\sum_i (n_i-1)s^2_i}{\sum_i (n_i - 1)}$$
+
+## {auto-animate="true"}
+
+when the samples are the same size,
+
+
+what is the combined variance of several samples?
+
+$$ \frac{1}{N} \sum_i s^2_i $$
+
+## {auto-animate="true"}
+
+when the samples are the same size,
+
+and have the same variance,
+
+what is the combined variance of several samples?
+
+$$ s^2 $$
+
+## Balance is a simplifying assumption
+
+- *Computer* used to refer to a person and not a machine
+- Balance is a special case of *symmetry* and symmetry is a very useful property for simplifying computations
+- Other types of symmetry assumptions are present everywhere (homoskedacity, sphericity, etc.), and it's often possible to relax them at the cost of great mathematical and thus computational complexity
+- In mixed models, *nesting* and *crossing* are also axes of potential symmetry
+
+## Nesting and crossing {.smaller}
+
+When examining "multi-level" data, we often consider whether the levels are *nested* or *crossed*.
+
+::: {.panel-tabset}
+
+### Nesting
+
+A classical example of *nesting* is children within classes/grades, classes within schools, schools within districts. In other others, each child appears in exactly one class and each class appears in exactly one school, so the grouping structure is like a Russian matroska doll.
+
+
+### Crossing
+
+A classical example of *crossing* occurs in many experimental designs in psychology, where each participant sees each stimulus item. In some sense, the item grouping is nested within the participant grouping, but it would also be equally true to say that the participant is grouping is nested within each item grouping.
+
+::: aside
+*Crossing* is the origin of the use of `*` in the R formula syntax for interactions and all lower-level effects. The notation goes back to @wilkinson_rogers_1973, who proposed using $\times$ for "crossing", but which is used for multiplication in other contexts.
+:::
+
+:::
+
+# I'm not well balanced...
+
+## Leaving the nest breaks nesting
+
+> A classical example of *nesting* is children within classes/grades, classes within schools, schools within districts.
+. . .
+
+What happens when we examine longitudinal data?
+
+:::{.incremental}
+- Students move between classes/grades. Students in the same cohort may no longer be lumped together at the next grade level.
+- Students move between schools and even districts, if they move homes.
+- Students may have to repeat a grade.
+:::
+
+## Crossing our fingers
+
+> A classical example of *crossing* occurs in many experimental designs in psychology, where each participant sees each stimulus item.
+
+:::{.incremental}
+- Often it is impractical to show every participant every stimulus, so each participants may only see a subset of items (e.g. Latin square design).
+- Mixed between-within designs where some conditions are within participants and some conditions are between participants defy classication into nesting or crossing.
+:::
+
+
+## It gets worse....{.smaller}
+
+:::{.incremental}
+- Even if we're able to perfectly control our experimental design, such that the *design* achieves perfect symmetry and the underlying experimental phenomon also displays the desired symmetry, we often won't acheive the desired balance in practice.
+- Good data science means that we have to be concerned with the _data_ and ideal data doesn't exist:
+    - in longitudinal studies, it's very common for some participants/groups to not be present for the entirety of the study: students move far away, participants fail to show up for a later appointment, etc.
+    - what happens if the number of students isn't balanced across classes?
+    - individual observations may need to be excluded due measurement artifacts or incorrect responses
+    - etc...
+- And what happens if we want to look at observational data? :scream:
+:::
+
+## The theory of mixed models doesn't require perfect balance, so why does your software? {.smaller}
+
+- Historically, it was very difficult to fit a mixed model, even in the 1990s.
+- Every shortcut in the book was considered to make the process faster and amenable to non trivial datasets, including requiring nesting and crossing.
+- The usual expression of the model fitting problem couldn't automatically detect the assumed structures, so these had to specified by the user.
+- Over time, the software influenced the thinking of the community until people struggled to think in terms beyond balance, nesting and crossing.
+
+. . .
+
+*When all you have is a hammer, every problem looks like a nail*
+
+::: aside
+
+When considering a new piece of software, it's always useful to check whether the developers include an example that involves more than a dozen observations.
+
+:::
+
+
+# Thank you for your attention!
+
+## References
