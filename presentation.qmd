@@ -332,6 +332,10 @@ Matrix(select(elp_crossing, Not(:subj)))
 
 ## ELP -- Balance
 
+::: {.panel-tabset}
+
+### Subjects
+
 ```{julia}
 #| echo: false
 draw(
@@ -341,6 +345,21 @@ draw(
   figure=(; size=(600, 450)),
 )
 ```
+
+### Items
+
+```{julia}
+#| echo: false
+draw(
+  data(byitem) *
+  mapping(:iacc => "Number of correct responses") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+
+:::
 
 ## ELP -- Excluding subjects
 
