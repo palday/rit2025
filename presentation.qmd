@@ -315,7 +315,7 @@ selection = sample(MersenneTwister(42), 1:nrow(ratings_movies), 100_000)
 ml_sample = ratings_movies[selection, :]
 
 ml_genre = @formula(rating ~ 1 + Action + Adventure + Animation + Children + Comedy + Crime + Documentary + Drama + Fantasy + FilmNoir + Horror + IMAX + Musical + Mystery + Romance + SciFi + Thriller + War + Western + (1|userId) + (1|movieId))
-ml_model = lmm(ml_genre, ml_sample; progress=isinteractive())
+@time ml_model = lmm(ml_genre, ml_sample; progress=isinteractive())
 println(ml_model)
 ```
 
