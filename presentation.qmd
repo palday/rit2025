@@ -358,7 +358,6 @@ draw(
 )
 ```
 
-
 :::
 
 ## ELP -- Excluding subjects
@@ -438,6 +437,41 @@ println(ml_model)
 ::: footer
 Data from @Harper2016. See https://embraceuncertaintybook.com/largescaleobserved.htmlfor a more detailed exploration.
 :::
+
+## MovieLens Data -- Balance
+
+*Note the y-scale!*
+
+::: {.panel-tabset}
+
+### Users
+
+```{julia}
+#| echo: false
+draw(
+  data(users) *
+  mapping(:urtngs => "Number of ratings") *
+  AoG.histogram(; bins=50);
+  axis=(; yscale=log10),
+  figure=(; size=(600, 450)),
+)
+```
+
+### Movies
+
+```{julia}
+#| echo: false
+draw(
+  data(movies) *
+  mapping(:nrtngs => "Number of ratings") *
+  AoG.histogram(; bins=50);
+  axis=(; yscale=log10),
+  figure=(; size=(600, 450)),
+)
+```
+
+:::
+
 
 # Thank you for your attention!
 
