@@ -1,0 +1,483 @@
+---
+title: "Statistics beyond classical balanced designs"
+subtitle: "The joy of mixed models"
+author:
+- name: Phillip Alday
+  affiliation: Beacon Biosignals
+  email: me@phillipalday.com
+  orcid: 0000-0002-9984-5745
+engine: julia
+execute:
+  cache: true
+julia:
+  exeflags: ["--project", "--threads=auto"]
+date: 2025-10-17
+date-format: "D MMMM YYYY"
+csl: apa-annotated-bibliography.csl
+bibliography: references.bib
+from: markdown+emoji
+format:
+  revealjs:
+    theme: dracula
+    # dark
+    # default
+    # dracula
+    # moon
+    # night
+    # serif
+    # simple
+    # solarized
+    # logo:
+    # footer: RIT DRSG
+    slide-number: true
+    show-slide-number: all # speaker
+    # slide-tone: true
+    chalkboard: false
+    embed-resources: true
+    preview-links: true
+---
+# Why do we care about balance?
+
+## Balance is a simplifying assumption
+
+- *Computer* used to refer to a person and not a machine
+- Balance is a special case of *symmetry* and symmetry is a very useful property for simplifying computations
+
+## {auto-animate="true"}
+
+what is the combined variance of several samples?
+
+$$ \frac{\sum_i (n_i-1)s^2_i}{\sum_i (n_i - 1)}$$
+
+## {auto-animate="true"}
+
+when the samples are the same size,
+
+
+what is the combined variance of several samples?
+
+$$ \frac{1}{N} \sum_i s^2_i $$
+
+## {auto-animate="true"}
+
+when the samples are the same size,
+
+and have the same variance,
+
+what is the combined variance of several samples?
+
+$$ s^2 $$
+
+## Balance is a simplifying assumption
+
+- Balance is a special case of *symmetry* and symmetry is a very useful property for simplifying computations
+- Other types of symmetry assumptions are present everywhere (homoskedacity, sphericity, etc.), and it's often possible to relax them at the cost of great mathematical and thus computational complexity
+
+## Mixed models
+- Mixed models are an extension of the classical regression framework often used to analyze repeated-measures data.
+- They relax the independence assumption by decomposing the variance into multiple components.
+
+$$
+\begin{aligned}
+(Y|B=b)&\sim{}N\left(X\beta+Zb,\sigma^{2}I\right)\\
+B&\sim{}N\left(0,\Sigma_\theta\right) .
+\end{aligned}
+$$
+
+## Balance is a simplifying assumption
+
+- Balance is a special case of *symmetry* and symmetry is a very useful property for simplifying computations
+- Other types of symmetry assumptions are present everywhere (homoskedacity, sphericity, etc.), and it's often possible to relax them at the cost of great mathematical and thus computational complexity
+- In mixed models, *nesting* and *crossing* are also axes of potential symmetry
+
+::: aside
+:::
+
+## Nesting and crossing {.smaller}
+
+When examining "multi-level" data, we often consider whether the levels are *nested* or *crossed*.
+
+::: {.panel-tabset}
+
+### Nesting
+
+A classical example of *nesting* is children within classes/grades, classes within schools, schools within districts. In other others, each child appears in exactly one class and each class appears in exactly one school, so the grouping structure is like a Russian matroska doll.
+
+### Crossing
+
+A classical example of *crossing* occurs in many experimental designs in psychology, where each participant sees each stimulus item. In some sense, the item grouping is nested within the participant grouping, but it would also be equally true to say that the participant is grouping is nested within each item grouping.
+
+::: aside
+*Crossing* is the origin of the use of `*` in the R formula syntax for interactions and all lower-level effects. The notation goes back to @wilkinson_rogers_1973, who proposed using $\times$ for "crossing", but which is used for multiplication in other contexts.
+:::
+
+:::
+
+# I'm not well balanced...
+
+## Leaving the nest breaks nesting
+
+> A classical example of *nesting* is children within classes/grades, classes within schools, schools within districts.
+. . .
+
+What happens when we examine longitudinal data?
+
+:::{.incremental}
+- Students move between classes/grades. Students in the same cohort may no longer be lumped together at the next grade level.
+- Students move between schools and even districts, if they move homes.
+- Students may have to repeat a grade.
+:::
+
+## Crossing our fingers
+
+> A classical example of *crossing* occurs in many experimental designs in psychology, where each participant sees each stimulus item.
+
+:::{.incremental}
+- Often it is impractical to show every participant every stimulus, so each participants may only see a subset of items (e.g. Latin square design).
+- Mixed between-within designs where some conditions are within participants and some conditions are between participants defy classication into nesting or crossing.
+:::
+
+
+## It gets worse....{.smaller}
+
+:::{.incremental}
+- Even if we're able to perfectly control our experimental design, such that the *design* achieves perfect symmetry and the underlying experimental phenomon also displays the desired symmetry, we often won't acheive the desired balance in practice.
+- Good data science means that we have to be concerned with the _data_ and ideal data doesn't exist:
+    - in longitudinal studies, it's very common for some participants/groups to not be present for the entirety of the study: students move far away, participants fail to show up for a later appointment, etc.
+    - what happens if the number of students isn't balanced across classes?
+    - individual observations may need to be excluded due measurement artifacts or incorrect responses
+    - etc...
+- And what happens if we want to look at observational data? :scream:
+:::
+
+# The Sapir-Whorf Hypothesis for Software and Computation
+
+## The theory of mixed models doesn't require perfect balance, so why does your software? {.smaller}
+
+- Historically, it was very difficult to fit a mixed model, even in the 1990s.
+- Every shortcut in the book was considered to make the process faster and amenable to non trivial datasets, including requiring nesting and crossing and constraints on the variance-covariance matrix of the random effects.
+- The usual expression of the model fitting problem couldn't automatically detect the assumed structures, so these had to specified by the user.
+- Over time, the software influenced the thinking of the community until people struggled to think in terms beyond balance, nesting and crossing.
+
+. . .
+
+
+*When all you have is a hammer, every problem looks like a nail*
+
+
+## The theory of mixed models doesn't require perfect balance, so why does your software? {.smaller}
+
+- The underlying computational issue is often expressed a generalized least squares problem.
+- If we instead formulate it as _penalized_ least squares problem, then it becomes trivial to handle arbitrary nesting, crossing or partial crossing with unstructructured covariance matrices.
+- The research program behind R's lme4 and Julia's MixedModels.jl implements this approach.
+- MixedModels.jl is able to fit mixed models to very large datasets (largest so far: 32m movie ratings with partially crossed random effects representing 201k users and 84k movies).
+
+# Examples
+
+## Course ratings from ETH-Zurich (insteval)
+
+```{julia}
+#| echo: true
+#| output-location: slide
+using MixedModels
+using MixedModelsDatasets: dataset
+@time fm1 = lmm(@formula(y ~ 1 + service + (1 | d) + (1 | s) + (1 + service | dept)),
+                dataset(:insteval); progress=isinteractive())
+println(fm1)
+```
+
+```{julia}
+#| include: false
+using DataFrames, SparseArrays
+using CairoMakie, AlgebraOfGraphics
+using AlgebraOfGraphics: AlgebraOfGraphics as AoG
+insteval = DataFrame(dataset(:insteval))
+insteval[!, :observed] .= 1
+```
+
+## insteval -- Nesting
+
+::: {.panel-tabset}
+
+### Instructors x Students
+
+```{julia}
+#| echo: false
+ds = unstack(select(insteval, :s, :d, :y), :s, :y; fill=0, combine=sum)
+Matrix(select(ds, Not(:d)))'
+```
+
+### Instructors x Dept
+
+```{julia}
+#| echo: false
+ddept = unstack(select(insteval, :dept, :d, :y), :dept, :y; fill=0, combine=sum)
+Matrix(select(ddept, Not(:d)))'
+```
+
+### Students x Dept
+
+```{julia}
+#| echo: false
+sdept = unstack(select(insteval, :dept, :s, :y), :dept, :y; fill=0, combine=sum)
+Matrix(select(sdept, Not(:s)))'
+```
+
+:::
+
+## insteval -- Balance
+
+::: {.panel-tabset}
+
+### Instructors
+```{julia}
+#| echo: false
+draw(
+  data(combine(groupby(insteval, :d), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+### Department
+
+```{julia}
+#| echo: false
+draw(
+  data(combine(groupby(insteval, :dept), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram();
+  figure=(; size=(600, 450)),
+)
+```
+
+### Students
+
+```{julia}
+draw(
+  data(combine(groupby(insteval, :s), nrow => :count)) *
+  mapping(:count => "Number of evaluations") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+:::
+
+
+## English Lexicon Project
+
+```{julia}
+#| echo: false
+using Chain, DataFrames, DataFrameMacros, StatsBase, StandardizedPredictors
+using Rit2025: dataset as eudataset
+ldttrial = DataFrame(eudataset(:ELP_ldt_trial))
+ldttrial = transform!(ldttrial, :seq => ByRow(>(2000)) => :s2)
+byitem = @chain ldttrial begin
+  groupby(:item)
+  @combine(
+    :ni = length(:acc),               # no. of obs
+    :imiss = count(ismissing, :acc),  # no. of missing acc
+    :iacc = count(skipmissing(:acc)), # no. of accurate
+    :imedianrt = median(:rt),
+  )
+  @transform!(
+    :wrdlen = Int8(length(:item)),
+    :ipropacc = :iacc / :ni
+  )
+end
+byitem.isword = isodd.(eachindex(byitem.item))
+leftjoin!(ldttrial, select(byitem, :item, :wrdlen, :isword); on=:item)
+disallowmissing!(ldttrial; error=false)
+bysubj = @chain ldttrial begin
+  groupby(:subj)
+  @combine(
+    :ns = length(:acc),               # no. of obs
+    :smiss = count(ismissing, :acc),  # no. of missing acc
+    :sacc = count(skipmissing(:acc)), # no. of accurate
+    :smedianrt = median(:rt),
+  )
+  @transform!(:spropacc = :sacc / :ns)
+end
+pruned = @chain ldttrial begin
+  @subset(!ismissing(:acc), 200 ≤ :rt ≤ 3000,)
+  leftjoin!(select(bysubj, :subj, :spropacc); on=:subj)
+  dropmissing!
+end
+contrasts = Dict(:isword => EffectsCoding(; base=false),
+                 :wrdlen => Center(8));
+```
+
+```{julia}
+#| echo: true
+#| output-location: slide
+# not shown: data wrangling and contrast creation
+@time elm01 = lmm(@formula(1000 / rt ~ 1 + isword * wrdlen + (1 | item) + (1 | subj)),
+                  pruned; contrasts, progress=isinteractive())
+println(elm01)
+```
+
+::: footer
+Data from @Balota_2007. See https://embraceuncertaintybook.com/largescaledesigned.html for a more detailed exploration.
+:::
+
+## ELP -- Nesting
+```{julia}
+#| echo: false
+elp_crossing = select(pruned, :subj, :item)
+elp_crossing[!, :observed] .= true
+elp_crossing = unstack(elp_crossing, :item, :observed; fill=false)
+Matrix(select(elp_crossing, Not(:subj)))
+```
+
+## ELP -- Balance
+
+::: {.panel-tabset}
+
+### Subjects
+
+```{julia}
+#| echo: false
+draw(
+  data(bysubj) *
+  mapping(:sacc => "Number of correct responses") *
+  AoG.histogram(; bins=100);
+  figure=(; size=(600, 450)),
+)
+```
+
+### Items
+
+```{julia}
+#| echo: false
+draw(
+  data(byitem) *
+  mapping(:iacc => "Number of correct responses") *
+  AoG.histogram(; bins=50);
+  figure=(; size=(600, 450)),
+)
+```
+
+:::
+
+## ELP -- Excluding subjects
+
+::: {.panel-tabset}
+
+### All subjects
+::: {data-id="sat"}
+```{julia}
+#| echo: false
+draw(
+  data(bysubj) *
+  mapping(
+    :spropacc => "Proportion accurate",
+    :smedianrt => "Median response time (ms)",
+  ) *
+  (smooth() + visual(Scatter));
+  figure=(; size=(600, 450)),
+)
+```
+:::
+
+### Subjects with at least 80% accuracy {auto-animate="true"}
+
+::: {data-id="sat"}
+```{julia}
+#| echo: false
+draw(
+  data(filter(:spropacc => >=(0.80), bysubj)) *
+  mapping(
+    :spropacc => "Proportion accurate",
+    :smedianrt => "Median response time (ms)",
+  ) *
+  (smooth() + visual(Scatter));
+  figure=(; size=(600, 450)),
+)
+
+```
+:::
+
+:::
+<!-- tabset -->
+
+## ELP -- Updated model
+
+```{julia}
+#| echo: true
+#| output-location: slide
+@time elm02 = lmm(@formula(1000 / rt ~ 1 + isword * wrdlen + (1 | item) + (1 | subj)),
+                  filter(:spropacc => >=(0.80), pruned); contrasts, progress=isinteractive())
+println(elm02)
+```
+
+## MovieLens Data
+
+```{julia}
+#| echo: false
+using Random
+ratings = DataFrame(eudataset(:ratings); copycols=true)
+movies = DataFrame(eudataset(:movies))
+users = combine(groupby(ratings, :userId),
+                nrow => :urtngs,
+                :rating => mean => :umnrtng)
+ratings_movies = dropmissing!(leftjoin(ratings, movies; on=:movieId));
+```
+
+```{julia}
+selection = sample(MersenneTwister(42), 1:nrow(ratings_movies), 100_000)
+ml_sample = ratings_movies[selection, :]
+
+ml_genre = @formula(rating ~ 1 + Action + Adventure + Animation + Children + Comedy + Crime + Documentary + Drama + Fantasy + FilmNoir + Horror + IMAX + Musical + Mystery + Romance + SciFi + Thriller + War + Western + (1|userId) + (1|movieId))
+@time ml_model = lmm(ml_genre, ml_sample; progress=isinteractive())
+println(ml_model)
+```
+
+
+::: footer
+Data from @Harper2016. See https://embraceuncertaintybook.com/largescaleobserved.htmlfor a more detailed exploration.
+:::
+
+## MovieLens Data -- Balance
+
+*Note the y-scale!*
+
+::: {.panel-tabset}
+
+### Users
+
+```{julia}
+#| echo: false
+draw(
+  data(users) *
+  mapping(:urtngs => "Number of ratings") *
+  AoG.histogram(; bins=50);
+  axis=(; yscale=log10),
+  figure=(; size=(600, 450)),
+)
+```
+
+### Movies
+
+```{julia}
+#| echo: false
+draw(
+  data(movies) *
+  mapping(:nrtngs => "Number of ratings") *
+  AoG.histogram(; bins=50);
+  axis=(; yscale=log10),
+  figure=(; size=(600, 450)),
+)
+```
+
+:::
+
+
+# Thank you for your attention!
+
+Work done in collaboration with Doug Bates.
+
+All mistakes are my own, and opinions presented here do not represent the opinion of my employer.
+
+## References
