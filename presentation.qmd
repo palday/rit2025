@@ -32,7 +32,8 @@ format:
     slide-number: true
     show-slide-number: all # speaker
     # slide-tone: true
-    chalkboard: true
+    chalkboard: false
+    embed-resources: true
     preview-links: true
 ---
 # Why do we care about balance?
