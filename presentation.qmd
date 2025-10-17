@@ -353,7 +353,7 @@ draw(
 draw(
   data(byitem) *
   mapping(:iacc => "Number of correct responses") *
-  AoG.histogram(; bins=100);
+  AoG.histogram(; bins=50);
   figure=(; size=(600, 450)),
 )
 ```
